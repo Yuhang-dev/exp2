@@ -6,6 +6,7 @@ from pathlib import Path
 
 import torch
 import triton
+from triton.runtime.driver import driver
 
 from upstream import flashprefill_native_forward as ops
 
@@ -49,7 +50,7 @@ def score_reference(q, mean_k):
     return score.permute(0, 2, 3, 1).contiguous()
 
 
-def raw_scores(q, k, config=None):
+def prepare_score_launch(q, k):
     batch, length, heads, dim = q.shape
     kv_heads = k.shape[2]
     blocks = triton.cdiv(length, 128)
@@ -58,17 +59,16 @@ def raw_scores(q, k, config=None):
         k, mean, *k.stride(), *mean.stride(), kv_heads, length, 128, dim)
     score = torch.full((batch, blocks, blocks, heads), -torch.inf, device=q.device)
     maximum = torch.full_like(score, -torch.inf)
-    launch = ops.compute_block_score
-    options = {"K_STRIDE": 128, "D_HEAD": dim}
-    if config is not None:
-        # Explicitly check every autotune candidate, without benchmarking it.
-        launch = launch.fn
-        options.update(config.kwargs)
-        options.update(num_warps=config.num_warps, num_stages=config.num_stages)
-    launch[(blocks, batch * heads, 1)](
+    args = (
         q, mean, dim**-.5, score, maximum, *q.stride(), *mean.stride(),
         *score.stride(), *maximum.stride(), heads, kv_heads, length, blocks,
-        128, **options)
+        128)
+    return mean, score, maximum, args, (blocks, batch * heads, 1)
+
+
+def raw_scores(q, k):
+    mean, score, maximum, args, grid = prepare_score_launch(q, k)
+    ops.compute_block_score[grid](*args, K_STRIDE=128, D_HEAD=q.shape[-1])
     return mean, score, maximum
 
 
@@ -88,14 +88,34 @@ def check_zero_scores(q, k, records):
     counts = torch.tensor(zero_score_counts(q.shape[1]), dtype=torch.float32, device=q.device)
     expected = counts[None, :, :, None].expand(1, -1, -1, 28)
     expected_max = torch.where(expected > 0, 0.0, -torch.inf)
+    _, raw, maximum, args, grid = prepare_score_launch(q, k)
+    launch = ops.compute_block_score.fn
+    shared_limit = driver.active.utils.get_device_properties(
+        driver.active.get_current_device())["max_shared_mem"]
+    checked, excluded = [], []
     for config in ops.get_score_configs():
-        _, raw, maximum = raw_scores(q, k, config)
+        options = {"K_STRIDE": 128, "D_HEAD": q.shape[-1], **config.all_kwargs()}
+        # JIT warmup compiles without loading or launching the CUDA kernel.
+        compiled = launch.warmup(*args, grid=grid, **options)
+        resource = {"config": config.all_kwargs(), "shared_bytes": compiled.metadata.shared}
+        if compiled.metadata.shared > shared_limit:
+            excluded.append(resource)
+            print(f"EXCLUDED {config}: shared memory {compiled.metadata.shared} > {shared_limit} bytes", flush=True)
+            continue
+        raw.fill_(-torch.inf)
+        maximum.fill_(-torch.inf)
+        launch[grid](*args, **options)
         label = f"zero_q_{q.shape[1]} {config}"
         torch.testing.assert_close(raw, expected, atol=0, rtol=0, msg=lambda message: f"{label}\n{message}")
         torch.testing.assert_close(maximum, expected_max, atol=0, rtol=0, msg=lambda message: f"{label}\n{message}")
+        checked.append(resource)
+    assert checked, "No score configuration fits the GPU shared memory limit"
     records.append({"check": f"zero_q_raw_scores_{q.shape[1]}",
-                    "configs_checked": len(ops.get_score_configs()), "exact_match": True})
-    print(f"PASS zero_q_raw_scores_{q.shape[1]}: all {len(ops.get_score_configs())} configs", flush=True)
+                    "configs_checked": len(checked), "exact_match": True,
+                    "shared_memory_limit_bytes": shared_limit, "checked_configs": checked,
+                    "excluded_shared_memory": excluded})
+    print(f"PASS zero_q_raw_scores_{q.shape[1]}: {len(checked)} configs checked, "
+          f"{len(excluded)} excluded by shared memory limit", flush=True)
 
 
 def sampled_score_reference(q, mean_k, query_blocks):

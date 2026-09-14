@@ -31,7 +31,9 @@
 
 本地 NumPy 对照覆盖 N=1024/1089 的零 Q 与随机 Q，比较原公式的全局归一化和改写的逐 key-block max/sum 后归一化：零 Q 完全一致，随机输入最大分数差分别为 1.79e-7、8.94e-8。此项验证数学等价性，不替代远端 GPU 检查。
 
-零 Q 解析计数现在对全部 20 个评分 autotune 候选逐个验证，要求精确一致；原来的随机输入 FP32 对照容差保持不变。131072 长度另外核对采样 query blocks 的 proxy score，而不仅检查 attention 索引。
+零 Q 解析计数逐个检查 20 个评分 autotune 候选中可在当前 GPU 执行的配置，要求精确一致；原来的随机输入 FP32 对照容差保持不变。131072 长度另外核对采样 query blocks 的 proxy score，而不仅检查 attention 索引。
+
+远端逐配置检查曾直接启动共享内存需求 132096 bytes 的候选，超过 RTX 4090 的每个 thread block 上限 101376 bytes，因此在数值比较前退出。这属于检查脚本的候选资源筛选遗漏。现在先用 JIT `warmup` 仅编译，比较 `metadata.shared` 与设备的 `max_shared_mem`，再执行满足限制的候选；超限项打印 `EXCLUDED`，在 JSON 中记录配置、需求和硬件上限，不计入数值通过数量。至少须有一个候选通过。模型运行的 autotune 候选池和评分公式保持原状。[Triton 3.2 JIT 实现](https://github.com/triton-lang/triton/blob/v3.2.0/python/triton/runtime/jit.py#L582-L598)与[共享内存限制判断](https://github.com/triton-lang/triton/blob/v3.2.0/python/triton/compiler/compiler.py#L358-L367)说明了这里使用的编译及资源接口。
 
 上述错误在 1K 测试上已复现，旧 4K–32K 测量尚未独立证明不受影响。旧数字暂不作为已验证基线，修复通过数值检查后重跑。
 
@@ -52,7 +54,7 @@ python -u check_kernel.py --out results/kernel_check.json
 
 检查使用独立 PyTorch FP32 数学参考，包括：
 
-1. N=1024 和 N=1089：全部 20 个评分候选的零 Q 解析计数；mean-k 和随机输入归一化块评分，对齐长度与不完整末块。
+1. N=1024 和 N=1089：所有满足当前 GPU 共享内存限制的评分候选的零 Q 解析计数；mean-k 和随机输入归一化块评分，对齐长度与不完整末块。
 2. 非均匀分数下的 0/1/2 个末尾保护块：indices/counts 与独立布尔选择器精确一致。
 3. 人工指定不同 head 的稀疏块：原 attention kernel 与相同稀疏掩码的 FP32 QK-softmax-PV 比较。
 4. 固定掩码后改变未来 K/V，验证此前输出不变。
