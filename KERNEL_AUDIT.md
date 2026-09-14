@@ -4,7 +4,7 @@
 
 ## 源码核对
 
-源码核对之后，远端数值检查发现了下述块评分错误；仅看源码不能判定 kernel 已正确执行。当前改写的 GPU 结果等待重新验证。
+源码核对之后，远端数值检查发现了下述块评分错误。改写后的版本现已通过用户远端的检查，包括 128K 的 attention 和 proxy score 边界采样。
 
 | 项目 | 核对结果 |
 | --- | --- |
@@ -35,7 +35,7 @@
 
 远端逐配置检查曾直接启动共享内存需求 132096 bytes 的候选，超过 RTX 4090 的每个 thread block 上限 101376 bytes，因此在数值比较前退出。这属于检查脚本的候选资源筛选遗漏。现在先用 JIT `warmup` 仅编译，比较 `metadata.shared` 与设备的 `max_shared_mem`，再执行满足限制的候选；超限项打印 `EXCLUDED`，在 JSON 中记录配置、需求和硬件上限，不计入数值通过数量。至少须有一个候选通过。模型运行的 autotune 候选池和评分公式保持原状。[Triton 3.2 JIT 实现](https://github.com/triton-lang/triton/blob/v3.2.0/python/triton/runtime/jit.py#L582-L598)与[共享内存限制判断](https://github.com/triton-lang/triton/blob/v3.2.0/python/triton/compiler/compiler.py#L358-L367)说明了这里使用的编译及资源接口。
 
-上述错误在 1K 测试上已复现，旧 4K–32K 测量尚未独立证明不受影响。旧数字暂不作为已验证基线，修复通过数值检查后重跑。
+上述错误在 1K 测试上已复现，旧 4K–32K 测量尚未独立证明不受影响。用户已在修复通过数值检查后重跑 4K–32K，后续分析使用 `results/study/baseline_native` 中的新结果。
 
 ## 需要区分的两种因果性
 
@@ -66,7 +66,15 @@ attention 默认逐元素 atol=0.02、rtol=0.02，整体相对 L2 必须小于 0
 
 `run_study.sh` 先运行检查；任一断言失败就退出，不进入模型实验。通过后先重跑原始 4K–32K 生成基线到 `results/study/baseline_native`，再开始新实验。新实验模型载入后，另核验 token 分块的 MLP/RMSNorm 与未分块计算的数值。
 
-本地可完成源码核对与语法检查。GPU 数值通过与否，以远端生成的 `kernel_check.json` 为准，当前不预填 PASS。
+用户远端日志已报告 `Kernel audit passed: results/study/kernel_check.json`：N=1024/1089 各 13 个可执行评分候选的零 Q 检查通过，随机 Q proxy score 最大绝对误差均为 1.19209e-7；128K attention 边界采样最大绝对误差 0.00171828、相对 L2 为 0.000665043，128K proxy score 边界采样最大绝对误差 5.96046e-8。此为远端实际结果，本地仅做源码和语法检查。
+
+## MLP 分块检查
+
+生成基线重跑完成后，位置实验首次启动在 MLP 的 BF16 逐元素对照处退出：7343616 个输出元素中有 1 个不满足 atol=0.02、rtol=0.02，差值为 0.03125。这次日志没有显存溢出。
+
+分块改变了 GEMM 的矩阵形状。[PyTorch 2.6 数值说明](https://docs.pytorch.org/docs/2.6/notes/numerical_accuracy.html#batched-computations-or-slice-computations)明确说明整张量与切片计算可能出现数值差异；这是该现象的可能解释，尚未定位具体底层 GEMM 算法。MLP 不再复用 attention 的逐元素容差：2049 tokens 覆盖两个完整分块和一个末尾 token，分别做 FP32 和 BF16 的分块/整段对照，检查每个 token 输出向量的相对 L2。项目验收上限分别为 1e-5 和 1%；它们是检查标准，不是已测误差或理论误差界。最大绝对误差、整体相对 L2 和最坏 token 相对 L2 均打印并写入 metadata。
+
+FP32 检查关闭 TF32，仅将第一层 MLP 临时转为 FP32，完成后恢复 BF16 权重及原 TF32 设置。RMSNorm 保留原有检查。attention kernel 的检查标准保持原状。新版 MLP 检查尚待远端执行；可用 `bash run_positions.sh` 从位置实验开始，复用已经完成的基线和文档流。
 
 ## 128K 的执行口径
 

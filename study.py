@@ -32,9 +32,28 @@ def configure(backend, method):
 def check_chunking(model):
     hidden = torch.randn(1, 2049, 3584, dtype=torch.bfloat16, device="cuda")
     records = []
-    for name, module in [("chunked_mlp", model.model.layers[0].mlp),
-                         ("chunked_rmsnorm", model.model.layers[0].input_layernorm)]:
-        check(name, module(hidden), module.unchunked_forward(hidden), records)
+    mlp = model.model.layers[0].mlp
+    original_tf32 = torch.backends.cuda.matmul.allow_tf32
+    torch.backends.cuda.matmul.allow_tf32 = False
+    # FP32 checks the split/concatenation; BF16 measures drift after reshaping GEMMs.
+    # BF16 -> FP32 -> BF16 preserves the stored model weights exactly.
+    for dtype, limit in [(torch.float32, 1e-5), (torch.bfloat16, .01)]:
+        mlp.to(dtype=dtype)
+        x = hidden.to(dtype)
+        actual = mlp(x).float()
+        expected = mlp.unchunked_forward(x).float()
+        delta = actual - expected
+        token_error = delta.norm(dim=-1) / expected.norm(dim=-1).clamp_min(1e-12)
+        record = {"check": f"chunked_mlp_{dtype}", "max_abs": delta.abs().max().item(),
+                  "relative_l2": (delta.norm() / expected.norm()).item(),
+                  "max_token_relative_l2": token_error.max().item(), "limit": limit}
+        records.append(record)
+        print(json.dumps(record), flush=True)
+        assert record["max_token_relative_l2"] < limit, record
+        print(f"PASS {record['check']}", flush=True)
+    torch.backends.cuda.matmul.allow_tf32 = original_tf32
+    norm = model.model.layers[0].input_layernorm
+    check("chunked_rmsnorm", norm(hidden), norm.unchunked_forward(hidden), records)
     return records
 
 

@@ -14,6 +14,16 @@ bash run_study.sh
 
 脚本先做 GPU kernel 数值检查，通过后先重跑原始 4K–32K 生成基线，再运行 4K/8K/16K/32K/64K/128K 的位置实验，统一 YaRN 4×；每种长度 4 个文档流、每种方法 3 次计时，比较 Dense 与末尾保护 0/1/2 blocks 的 FlashPrefill。最后额外运行原始 RoPE 的 32K 对照。全部复用 exp1 环境。
 
+如果 kernel 检查、生成基线和文档流准备已经完成，直接运行位置实验，保留已有基线：
+
+```bash
+cd /root/autodl-tmp/exp2
+git pull
+bash run_positions.sh
+```
+
+这个入口使用现有 `results/study/streams.pt`，从 4K 位置实验开始，随后运行到 128K。
+
 新报告：`results/study/REPORT.md`，每完成一个长度更新一次；重跑的生成基线在 `results/study/baseline_native/REPORT.md`。逐 token 误差、位置分组、P95/P99、最差 token 上下文及严格前缀预测分别保存在对应 CSV。大文件 `streams.pt` 和逐次 `tokens.csv` 留在远端，不提交 Git。
 
 为在 24 GiB GPU 上处理 128K，新实验把 MLP/RMSNorm 按 token 分块，并使用 `use_cache=False`；attention 仍处理完整序列。新速度指标是**不保留跨层 KV 的完整模型前向时间**，与下方旧实验的生成 TTFT 分开。核对发现的不完整 query block 评分问题、块路由的同块后续 query 依赖，以及检查项目详见 [KERNEL_AUDIT.md](KERNEL_AUDIT.md)。
@@ -87,4 +97,4 @@ python report.py results/qwen25_7b
 
 ## 执行状态
 
-旧版 4K–32K 测量已由用户完成，但随后 1K 数值检查确认原评分 kernel 出现错误，旧数字暂不作为通过正确性验证的基线。评分 kernel 已按相同 V1 公式改写，检查入口包含零 Q 解析反例及原 FP32 对照；新 GPU 结果等待远端执行。
+改写后的评分 kernel 已通过用户远端的数值检查，包括 128K 边界采样；修复后的 4K–32K 生成基线也已完整重跑。位置实验首次启动停在 MLP 分块的 BF16 逐元素检查（7343616 个元素中 1 个超出容差）。检查现改为 FP32 分块对照及 BF16 逐 token 相对 L2，记录实际误差；新版检查和完整模型的 64K/128K 结果等待远端运行。上述 kernel 通过范围限于脚本中的测试用例。
