@@ -49,7 +49,7 @@ def score_reference(q, mean_k):
     return score.permute(0, 2, 3, 1).contiguous()
 
 
-def score_kernel(q, k):
+def raw_scores(q, k):
     batch, length, heads, dim = q.shape
     kv_heads = k.shape[2]
     blocks = triton.cdiv(length, 128)
@@ -62,6 +62,11 @@ def score_kernel(q, k):
         q, mean, dim**-.5, score, maximum, *q.stride(), *mean.stride(),
         *score.stride(), *maximum.stride(), heads, kv_heads, length, blocks,
         128, K_STRIDE=128, D_HEAD=dim)
+    return mean, score, maximum
+
+
+def score_kernel(q, k):
+    mean, score, maximum = raw_scores(q, k)
     return mean, ops.normalize_scores(score, maximum).clone()
 
 
