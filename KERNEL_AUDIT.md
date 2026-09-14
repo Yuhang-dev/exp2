@@ -74,7 +74,7 @@ attention 默认逐元素 atol=0.02、rtol=0.02，整体相对 L2 必须小于 0
 
 分块改变了 GEMM 的矩阵形状。[PyTorch 2.6 数值说明](https://docs.pytorch.org/docs/2.6/notes/numerical_accuracy.html#batched-computations-or-slice-computations)明确说明整张量与切片计算可能出现数值差异；这是该现象的可能解释，尚未定位具体底层 GEMM 算法。MLP 不再复用 attention 的逐元素容差：2049 tokens 覆盖两个完整分块和一个末尾 token，分别做 FP32 和 BF16 的分块/整段对照，检查每个 token 输出向量的相对 L2。项目验收上限分别为 1e-5 和 1%；它们是检查标准，不是已测误差或理论误差界。最大绝对误差、整体相对 L2 和最坏 token 相对 L2 均打印并写入 metadata。
 
-FP32 检查关闭 TF32，仅将第一层 MLP 临时转为 FP32，完成后恢复 BF16 权重及原 TF32 设置。RMSNorm 保留原有检查。attention kernel 的检查标准保持原状。新版 MLP 检查尚待远端执行；可用 `bash run_positions.sh` 从位置实验开始，复用已经完成的基线和文档流。
+FP32 检查关闭 TF32，仅将第一层 MLP 临时转为 FP32，完成后恢复 BF16 权重及原 TF32 设置。RMSNorm 保留原有检查。attention kernel 的检查标准保持原状。用户随后已提供全部位置实验完成的日志及[汇总报告](results/study_4090/REPORT.md)，包含 64K/128K 和最后的原始 RoPE 32K 对照；逐项 MLP 检查误差仍以远端各目录的 metadata.json 为准。
 
 ## 128K 的执行口径
 
