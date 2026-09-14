@@ -8,9 +8,10 @@ from upstream import flashprefill_native_forward as kernels
 
 
 class AttentionBackend:
-    def __init__(self, alpha=0.08):
+    def __init__(self, alpha=0.08, last_full=2):
         self.method = "dense"
         self.alpha = alpha
+        self.last_full = last_full
         self.record = False
         self.events = []
         self.blocks = []
@@ -38,7 +39,7 @@ class AttentionBackend:
             k = key.transpose(1, 2).contiguous()
             v = value.transpose(1, 2).contiguous()
             output = torch.empty_like(q)
-            kernels.flash_prefill(q, k, v, output, 128, 2, 4, self.alpha, 2, 0)
+            kernels.flash_prefill(q, k, v, output, 128, 2, 4, self.alpha, self.last_full, 0)
         else:
             # A one-token decode query sees every cached key, including itself.
             output = F.scaled_dot_product_attention(

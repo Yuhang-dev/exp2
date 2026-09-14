@@ -112,6 +112,8 @@ def make_report(folder):
               "不在 EOS 处提前停止。Decode 计时包含缓存更新和 Python 调度。", "",
               "tail NLL 只评价截取文档最后一段 token，不包含指令和 chat template；它不是全篇困惑度或任务准确率。"
               "原始质量测量及 token 数见 quality.csv。", "",
+              "FlashPrefill 的块路由会汇总同块后续 query；整篇前向的中间位置 NLL/PPL 是误差诊断，"
+              "不作为严格自回归困惑度。只输入前缀的预测对照见 run_study.sh。", "",
               "layers.csv 来自单独的质量/profile 前向，含事件和块计数记录开销，不纳入主计时。"
               "块比例以因果可见的 128×128 块为分母，包含强制保留的 sink、局部窗口和末尾 query 块。", "",
               "复现信息见 metadata.json；输入文档 ID、长度和 token SHA256 见 inputs.jsonl。", ""]

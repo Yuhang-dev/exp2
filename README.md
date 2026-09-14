@@ -4,6 +4,22 @@
 
 ## 在远端运行
 
+扩展至 128K 的 kernel 检查、位置误差和末尾保护消融：
+
+```bash
+cd /root/autodl-tmp/exp2
+git pull
+bash run_study.sh
+```
+
+脚本先做 GPU kernel 数值检查，通过后运行 4K/8K/16K/32K/64K/128K，统一 YaRN 4×；每种长度 4 个文档流、每种方法 3 次计时，比较 Dense 与末尾保护 0/1/2 blocks 的 FlashPrefill。最后额外运行原始 RoPE 的 32K 对照。全部复用 exp1 环境。
+
+新报告：`results/study/REPORT.md`，每完成一个长度更新一次。逐 token 误差、位置分组、P95/P99、最差 token 上下文及严格前缀预测分别保存在对应 CSV。大文件 `streams.pt` 和逐次 `tokens.csv` 留在远端，不提交 Git。
+
+为在 24 GiB GPU 上处理 128K，新实验把 MLP/RMSNorm 按 token 分块，并使用 `use_cache=False`；attention 仍处理完整序列。新速度指标是**不保留跨层 KV 的完整模型前向时间**，与下方旧实验的生成 TTFT 分开。核对发现的不完整 query block 评分问题、块路由的同块后续 query 依赖，以及检查项目详见 [KERNEL_AUDIT.md](KERNEL_AUDIT.md)。
+
+原版 4K–32K 生成基线仍使用下面的入口：
+
 ```bash
 cd /root/autodl-tmp
 git clone https://github.com/Yuhang-dev/exp2.git
@@ -45,6 +61,8 @@ bash run.sh --lengths 8192 --samples 1 --repeats 3 --out results/qwen25_8k
 
 精度代理包括文档末尾 512 tokens 的 teacher-forced NLL/PPL，以及输入结束位置的 next-token KL 和 argmax 一致性。NLL 在文档区域取样，不计末尾指令；LM head 分块计算。截取文档不做摘要答案评分。
 
+核对后明确：块路由会汇总同块后续 query，因此上述整篇前向的中间位置 NLL/PPL 应解释为误差诊断，不能作为严格自回归困惑度。新实验另外提供只输入前缀的预测对照。
+
 另做一次独立 profile，保存每层 attention 时间及保留块比例。profile 的事件和计数开销不混入主计时。速度表取重复测量中位数，显存取最大值；默认 2 篇文档的结果用于建立基线。
 
 ## 输出
@@ -69,4 +87,4 @@ python report.py results/qwen25_7b
 
 ## 执行状态
 
-本地 Python 语法检查已通过，代码已推送到 exp2。远端 GPU 与环境版本已由用户确认；GPU 实验由用户在远端运行，当前尚无实测速度或精度结果。
+原版 4K–32K 基线已由用户在 RTX 4090 上跑完，用户提供的报告中 32K prefill 为 Dense 4852.1 ms、FlashPrefill 4000.4 ms（1.21×）。新增 kernel 数值检查与 128K 实验的 GPU 结果等待远端执行；本地检查不替代 GPU 数值验证。

@@ -1,5 +1,5 @@
 # Source: qhfan/FlashPrefill, commit baa612047433a992a00d07dc178205eed065ae14
-# Only the unused FLA inference decorators/import were removed; kernels are unchanged.
+# FLA wrappers removed. Block scoring excludes padded queries for partial blocks.
 import torch
 import triton
 import triton.language as tl
@@ -156,7 +156,7 @@ def compute_block_score(
         )
 
         qk = tl.dot(q, tl.trans(k))
-        causal_mask = (q_index[:, None] >= k_index_max[None, :]) # (block_size, k_tile_size)
+        causal_mask = (q_index[:, None] >= k_index_max[None, :]) & (q_index[:, None] < query_len)
 
         qk = tl.where(causal_mask, qk, float('-inf'))
         qk *= sm_scale # (block_size, (num_block_per_tile, num_stride_per_block))

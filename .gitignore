@@ -3,3 +3,6 @@ __pycache__/
 .cache/
 results/*/inputs.pt
 results/*/run.log
+results/**/streams.pt
+results/**/tokens.csv
+results/**/run.log

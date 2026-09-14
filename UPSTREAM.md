@@ -8,8 +8,12 @@
 
 保留上游 mean pooling、块评分、归一化、阈值选择、索引排序和 sparse attention kernels，包含原有 autotune 和 torch.compile。
 
-适配只删除 `fla.utils` 的导入及 `@contiguous`、`@autocast_custom_fwd` 两个装饰器。`attention.py` 显式提供连续的 Q/K/V 和输出张量，模型固定 BF16 推理，因此不需要安装 FLA。
+初版适配删除 `fla.utils` 的导入及 `@contiguous`、`@autocast_custom_fwd` 两个装饰器。`attention.py` 显式提供连续的 Q/K/V 和输出张量，模型固定 BF16 推理，因此不需要安装 FLA。
+
+本次核对另外修正 `compute_block_score`：`causal_mask` 加入 `q_index < query_len`，排除最后一个不完整 query block 的补齐行。原代码把补齐的零 query 纳入历史块评分；原先 4K–32K 整块长度的实验不受该修正影响。attention 的 QK/softmax/PV kernel 和 autotune 配置没有修改。检查范围及数值验证入口见 [KERNEL_AUDIT.md](KERNEL_AUDIT.md)。
 
 采用 V1 的纯稀疏路径，没有 V2 mean correction。块大小 128，alpha=0.08，sink=2 blocks，window=4 blocks，最后 2 个 query blocks 保留完整历史，min_budget=0。全部 28 层使用上述 prefill 配置。
+
+`run_study.sh` 额外对比末尾全注意力块为 0、1、2 的设置；新实验的主曲线统一 YaRN 4×，并另做相同 32K 输入的原始 RoPE 对照。配置不改变模型权重。
 
 exp1 的 Transformers 为 4.51.3，因此接入该版本的 attention dispatch，继续使用库内原始 Qwen2 投影、RoPE、KV cache 和输出投影。两条路径的 decode 都使用 PyTorch Flash SDPA，enable_gqa=True；prefill 使用因果模式，单 token decode 可以读取全部已有 KV。
