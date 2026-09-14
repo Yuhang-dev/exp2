@@ -4,7 +4,7 @@ import json
 
 import torch
 
-from check_kernel import raw_scores, score_reference
+from check_kernel import raw_scores, score_reference, zero_score_counts
 from upstream import flashprefill_native_forward as ops
 
 
@@ -23,6 +23,9 @@ def main():
         future = torch.triu(torch.ones(8, 8, dtype=torch.bool, device="cuda"), diagonal=1)
         result = {
             "case": name,
+            "score_implementation": ops.SCORE_IMPL,
+            "autotune_config": str(ops.compute_block_score.best_config),
+            "zero_q_expected_counts": zero_score_counts(1024) if name == "zero_q" else None,
             "q_stride": queries.stride(), "mean_stride": mean.stride(), "raw_stride": raw.stride(),
             "eager_stride": eager.stride(), "compiled_stride": compiled.stride(),
             "reference_stride": reference.stride(),

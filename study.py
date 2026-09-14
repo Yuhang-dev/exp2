@@ -11,6 +11,7 @@ from torch.nn.attention import SDPBackend, sdpa_kernel
 from transformers import AutoTokenizer
 import transformers
 import triton
+from upstream import flashprefill_native_forward as ops
 
 from attention import AttentionBackend
 from benchmark import Output
@@ -131,7 +132,7 @@ def main():
                 "samples": len(data["streams"]), "chunk_checks": checks,
                 "measurement": "full model forward, use_cache=False, final-position LM head and argmax",
                 "attention": {"alpha": args.alpha, "block_size": 128, "sink": 2, "window": 4,
-                              "last_full": [0, 1, 2], "layers": 28},
+                              "last_full": [0, 1, 2], "layers": 28, "score_kernel": ops.SCORE_IMPL},
                 "quality": "Full-pass interior NLL/KL is diagnostic; prefix readouts exclude target/suffix."}
     (args.out / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     key = ["method", "sample", "seq_len"]

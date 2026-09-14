@@ -49,7 +49,7 @@ def score_reference(q, mean_k):
     return score.permute(0, 2, 3, 1).contiguous()
 
 
-def raw_scores(q, k):
+def raw_scores(q, k, config=None):
     batch, length, heads, dim = q.shape
     kv_heads = k.shape[2]
     blocks = triton.cdiv(length, 128)
@@ -58,16 +58,61 @@ def raw_scores(q, k):
         k, mean, *k.stride(), *mean.stride(), kv_heads, length, 128, dim)
     score = torch.full((batch, blocks, blocks, heads), -torch.inf, device=q.device)
     maximum = torch.full_like(score, -torch.inf)
-    ops.compute_block_score[(blocks, batch * heads, 1)](
+    launch = ops.compute_block_score
+    options = {"K_STRIDE": 128, "D_HEAD": dim}
+    if config is not None:
+        # Explicitly check every autotune candidate, without benchmarking it.
+        launch = launch.fn
+        options.update(config.kwargs)
+        options.update(num_warps=config.num_warps, num_stages=config.num_stages)
+    launch[(blocks, batch * heads, 1)](
         q, mean, dim**-.5, score, maximum, *q.stride(), *mean.stride(),
         *score.stride(), *maximum.stride(), heads, kv_heads, length, blocks,
-        128, K_STRIDE=128, D_HEAD=dim)
+        128, **options)
     return mean, score, maximum
 
 
 def score_kernel(q, k):
     mean, score, maximum = raw_scores(q, k)
     return mean, ops.normalize_scores(score, maximum).clone()
+
+
+def zero_score_counts(length):
+    blocks = triton.cdiv(length, 128)
+    return [[max(0, min((qb + 1) * 128, length) - max(qb * 128, (kb + 1) * 128 - 1))
+             for kb in range(blocks)] for qb in range(blocks)]
+
+
+def check_zero_scores(q, k, records):
+    q = torch.zeros_like(q)
+    counts = torch.tensor(zero_score_counts(q.shape[1]), dtype=torch.float32, device=q.device)
+    expected = counts[None, :, :, None].expand(1, -1, -1, 28)
+    expected_max = torch.where(expected > 0, 0.0, -torch.inf)
+    for config in ops.get_score_configs():
+        _, raw, maximum = raw_scores(q, k, config)
+        label = f"zero_q_{q.shape[1]} {config}"
+        torch.testing.assert_close(raw, expected, atol=0, rtol=0, msg=lambda message: f"{label}\n{message}")
+        torch.testing.assert_close(maximum, expected_max, atol=0, rtol=0, msg=lambda message: f"{label}\n{message}")
+    records.append({"check": f"zero_q_raw_scores_{q.shape[1]}",
+                    "configs_checked": len(ops.get_score_configs()), "exact_match": True})
+    print(f"PASS zero_q_raw_scores_{q.shape[1]}: all {len(ops.get_score_configs())} configs", flush=True)
+
+
+def sampled_score_reference(q, mean_k, query_blocks):
+    # Q @ K_mean.T with FP32 accumulation; materialize only sampled query blocks.
+    k = mean_k.repeat_interleave(q.shape[2] // mean_k.shape[2], dim=2).float()
+    key_ends = (torch.arange(mean_k.shape[1], device=q.device) + 1) * 128 - 1
+    results = []
+    for block in query_blocks:
+        left, right = block * 128, min((block + 1) * 128, q.shape[1])
+        logits = torch.einsum("bqhd,bkhd->bhqk", q[:, left:right].float(), k) / q.shape[-1]**.5
+        allowed = torch.arange(left, right, device=q.device)[:, None] >= key_ends[None, :]
+        logits.masked_fill_(~allowed, -torch.inf)
+        maximum = logits.amax((2, 3), keepdim=True)
+        maximum = torch.where(torch.isfinite(maximum), maximum, 0)
+        mass = (logits - maximum).exp().sum(2)
+        results.append(mass / (mass.sum(-1, keepdim=True) + 1e-9))
+    return torch.stack(results, dim=2).permute(0, 2, 3, 1).contiguous()
 
 
 def attention_kernel(q, k, v, indices, counts):
@@ -143,6 +188,8 @@ def main():
         q = torch.randn(1, length, 28, 128, device="cuda", dtype=torch.bfloat16)
         k = torch.randn(1, length, 4, 128, device="cuda", dtype=torch.bfloat16)
         v = torch.randn_like(k)
+        print(f"Checking raw zero-Q scores at {length} for every autotune config", flush=True)
+        check_zero_scores(q, k, records)
         mean, score = score_kernel(q, k)
         mean_ref = torch.stack([k[:, p:p + 128].float().mean(1) for p in range(0, length, 128)], 1)
         check(f"mean_{length}", mean, mean_ref, records, atol=.002, rtol=.02)
@@ -192,9 +239,14 @@ def main():
     positions = torch.tensor([0, 127, 128, 32767, 32768, 65535, 65536, 131070, 131071], device="cuda")
     check("128k_indexing_and_boundaries", out[:, positions],
           attention_reference(q, k, v, indices, counts, positions), records)
+    mean, score = score_kernel(q, k)
+    query_blocks = [0, 1, 255, 256, 511, 512, 1023]
+    check("128k_proxy_score_boundaries", score[:, query_blocks],
+          sampled_score_reference(q, mean, query_blocks), records, atol=2e-4, rtol=.005)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"status": "PASS", "gpu": torch.cuda.get_device_name(),
-        "torch": torch.__version__, "triton": triton.__version__, "checks": records}, indent=2), encoding="utf-8")
+        "torch": torch.__version__, "triton": triton.__version__,
+        "score_implementation": ops.SCORE_IMPL, "checks": records}, indent=2), encoding="utf-8")
     print(f"Kernel audit passed: {args.out}", flush=True)
 
 

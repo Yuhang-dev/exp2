@@ -1,10 +1,12 @@
 # Source: qhfan/FlashPrefill, commit baa612047433a992a00d07dc178205eed065ae14
-# FLA wrappers removed. Block scoring excludes padded queries for partial blocks.
+# FLA wrappers removed. V1 scoring uses K_mean @ Q.T and row reductions.
 import torch
 import triton
 import triton.language as tl
 # Inference adapter: contiguous inputs are supplied by attention.py; BF16 is explicit.
 import math
+
+SCORE_IMPL = "v1_kmean_qt_row_reduce"
 
 def get_mean_configs():
     configs = []
@@ -101,11 +103,8 @@ def compute_block_score(
     K_STRIDE: tl.constexpr,
     D_HEAD: tl.constexpr
 ):
-    '''
-    optimized with stride
-    '''
-    num_stride_per_block: tl.constexpr = BLOCK_SIZE // K_STRIDE
-    num_block_per_tile: tl.constexpr = K_TILE_SIZE // num_stride_per_block
+    # The V1 entry point uses exactly one mean key per block.
+    tl.static_assert(K_STRIDE == BLOCK_SIZE)
 
     query_tile_index = tl.program_id(0).to(tl.int64)
     offset_zh = tl.program_id(1).to(tl.int64)
@@ -131,9 +130,6 @@ def compute_block_score(
     offset_q = query_tile_index * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
     offset_dim = tl.arange(0, D_HEAD)
 
-    q_index_max = query_tile_index * BLOCK_SIZE + BLOCK_SIZE - 1
-    q_index = offset_q
-    
     q = tl.load(
         Q_base_ptr + offset_q[:, None] * stride_qm + offset_dim[None, :] * stride_qd,
         mask=(offset_q[:, None] < query_len) & (offset_dim[None, :] < D_HEAD),
@@ -141,13 +137,12 @@ def compute_block_score(
     )
 
     lo = 0
-    hi = tl.cdiv(q_index_max, K_STRIDE)
+    hi = tl.minimum(query_tile_index + 1, sub_key_len)
 
     sm_scale = scale * 1.4426950408889634
 
     for j in range(lo, hi, K_TILE_SIZE):
         offset_k = j + tl.arange(0, K_TILE_SIZE)
-        k_index_min = offset_k * K_STRIDE
         k_index_max = offset_k * K_STRIDE + K_STRIDE - 1
         k = tl.load(
             K_base_ptr + offset_k[:, None] * stride_kn + offset_dim[None, :] * stride_kd,
@@ -155,27 +150,21 @@ def compute_block_score(
             other=0.0
         )
 
-        qk = tl.dot(q, tl.trans(k))
-        causal_mask = (q_index[:, None] >= k_index_max[None, :]) & (q_index[:, None] < query_len)
+        # Same dot products as Q @ K_mean.T; reduce query positions on axis 1.
+        # Avoid the original [Q,K,1] reshape and axis-0 MMA reduction, whose
+        # raw output duplicated columns in the user's Triton 3.2/RTX 4090 run.
+        kq = tl.dot(k, tl.trans(q)) * sm_scale
+        causal_mask = (
+            (offset_q[None, :] >= k_index_max[:, None])
+            & (offset_q[None, :] < query_len)
+            & (offset_k[:, None] < sub_key_len)
+        )
+        kq = tl.where(causal_mask, kq, float('-inf'))
+        m_i_block = tl.max(kq, axis=1)
+        p_block = tl.where(causal_mask, tl.exp2(kq - m_i_block[:, None]), 0.0)
+        p_block = tl.sum(p_block, axis=1)
 
-        qk = tl.where(causal_mask, qk, float('-inf'))
-        qk *= sm_scale # (block_size, (num_block_per_tile, num_stride_per_block))
-
-        qk = tl.reshape(qk, (BLOCK_SIZE, num_block_per_tile, num_stride_per_block))
-        m_i_block = tl.max(qk, axis=2) #(block_size, num_block_per_tile)
-        m_i_block = tl.max(m_i_block, axis=0) # (num_block_per_tile)
-
-        qk_block = qk - m_i_block[None, :, None]
-        p_block = tl.exp2(qk_block)
-
-        causal_mask_block = tl.reshape(causal_mask, (BLOCK_SIZE, num_block_per_tile, num_stride_per_block))
-        p_block = tl.where(causal_mask_block, p_block, 0.0) #(BLOCK_SIZE, num_block_per_tile, num_stride_per_block)
-
-
-        p_block = tl.sum(p_block, 2) 
-        p_block = tl.sum(p_block, 0) # num_block_per_tile
-
-        offset_k_blocks = (j // K_TILE_SIZE) * num_block_per_tile + tl.arange(0, num_block_per_tile)
+        offset_k_blocks = offset_k
 
         tl.store(
             sc_base_ptr + query_tile_index * stride_scmb + offset_k_blocks * stride_scnb,

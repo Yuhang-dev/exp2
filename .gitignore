@@ -4,5 +4,6 @@ __pycache__/
 results/*/inputs.pt
 results/*/run.log
 results/**/streams.pt
+results/**/inputs.pt
 results/**/tokens.csv
 results/**/run.log

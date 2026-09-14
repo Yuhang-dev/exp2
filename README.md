@@ -12,9 +12,9 @@ git pull
 bash run_study.sh
 ```
 
-脚本先做 GPU kernel 数值检查，通过后运行 4K/8K/16K/32K/64K/128K，统一 YaRN 4×；每种长度 4 个文档流、每种方法 3 次计时，比较 Dense 与末尾保护 0/1/2 blocks 的 FlashPrefill。最后额外运行原始 RoPE 的 32K 对照。全部复用 exp1 环境。
+脚本先做 GPU kernel 数值检查，通过后先重跑原始 4K–32K 生成基线，再运行 4K/8K/16K/32K/64K/128K 的位置实验，统一 YaRN 4×；每种长度 4 个文档流、每种方法 3 次计时，比较 Dense 与末尾保护 0/1/2 blocks 的 FlashPrefill。最后额外运行原始 RoPE 的 32K 对照。全部复用 exp1 环境。
 
-新报告：`results/study/REPORT.md`，每完成一个长度更新一次。逐 token 误差、位置分组、P95/P99、最差 token 上下文及严格前缀预测分别保存在对应 CSV。大文件 `streams.pt` 和逐次 `tokens.csv` 留在远端，不提交 Git。
+新报告：`results/study/REPORT.md`，每完成一个长度更新一次；重跑的生成基线在 `results/study/baseline_native/REPORT.md`。逐 token 误差、位置分组、P95/P99、最差 token 上下文及严格前缀预测分别保存在对应 CSV。大文件 `streams.pt` 和逐次 `tokens.csv` 留在远端，不提交 Git。
 
 为在 24 GiB GPU 上处理 128K，新实验把 MLP/RMSNorm 按 token 分块，并使用 `use_cache=False`；attention 仍处理完整序列。新速度指标是**不保留跨层 KV 的完整模型前向时间**，与下方旧实验的生成 TTFT 分开。核对发现的不完整 query block 评分问题、块路由的同块后续 query 依赖，以及检查项目详见 [KERNEL_AUDIT.md](KERNEL_AUDIT.md)。
 
@@ -87,4 +87,4 @@ python report.py results/qwen25_7b
 
 ## 执行状态
 
-原版 4K–32K 基线已由用户在 RTX 4090 上跑完，用户提供的报告中 32K prefill 为 Dense 4852.1 ms、FlashPrefill 4000.4 ms（1.21×）。新增 kernel 数值检查与 128K 实验的 GPU 结果等待远端执行；本地检查不替代 GPU 数值验证。
+旧版 4K–32K 测量已由用户完成，但随后 1K 数值检查确认原评分 kernel 出现错误，旧数字暂不作为通过正确性验证的基线。评分 kernel 已按相同 V1 公式改写，检查入口包含零 Q 解析反例及原 FP32 对照；新 GPU 结果等待远端执行。

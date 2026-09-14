@@ -18,6 +18,7 @@ import triton
 
 from attention import AttentionBackend
 from data import prepare_inputs
+from upstream import flashprefill_native_forward as ops
 
 
 def arguments():
@@ -148,7 +149,8 @@ def main():
         ], text=True).strip(),
         "attention": {"block_size": 128, "alpha": args.alpha, "sink_blocks": 2,
                       "window_blocks": 4, "last_query_blocks_full": 2,
-                      "min_budget": 0, "sparse_layers": "all 28", "decode": "dense Flash SDPA"},
+                      "min_budget": 0, "sparse_layers": "all 28", "decode": "dense Flash SDPA",
+                      "score_kernel": ops.SCORE_IMPL},
     }
     (args.out / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     common = ["method", "seq_len", "sample", "source_id"]
