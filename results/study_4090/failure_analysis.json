@@ -1,0 +1,853 @@
+{
+  "sources": [
+    "worst_tokens.csv",
+    "per_sample_errors.csv"
+  ],
+  "worst_rows": 420,
+  "per_sample_rows": 492,
+  "distinct_locations_across_methods": 184,
+  "method": "Token-count-weighted means; recover threshold counts with round(fraction*tokens). Do not average subgroup quantiles. Worst rows are top-20 selections, not a full token population.",
+  "tail2_per_sample": [
+    {
+      "rope": "native",
+      "seq_len": 32768,
+      "sample": 0,
+      "tokens": 896,
+      "delta_nll": -0.007095971736770804,
+      "mean_kl": 0.01530670331327383,
+      "same_top1": 0.9419642857142857,
+      "delta_gt_1_count": 0
+    },
+    {
+      "rope": "native",
+      "seq_len": 32768,
+      "sample": 1,
+      "tokens": 896,
+      "delta_nll": 0.014320151759974599,
+      "mean_kl": 0.014530351989552695,
+      "same_top1": 0.953125,
+      "delta_gt_1_count": 6
+    },
+    {
+      "rope": "native",
+      "seq_len": 32768,
+      "sample": 2,
+      "tokens": 896,
+      "delta_nll": 0.017390611251067334,
+      "mean_kl": 0.022132916190015804,
+      "same_top1": 0.9229910714285714,
+      "delta_gt_1_count": 4
+    },
+    {
+      "rope": "native",
+      "seq_len": 32768,
+      "sample": 3,
+      "tokens": 896,
+      "delta_nll": 0.014694052441236545,
+      "mean_kl": 0.017994274222509016,
+      "same_top1": 0.9408482142857143,
+      "delta_gt_1_count": 3
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 4096,
+      "sample": 0,
+      "tokens": 768,
+      "delta_nll": 0.00020575079809311586,
+      "mean_kl": 0.0179409612504114,
+      "same_top1": 0.94140625,
+      "delta_gt_1_count": 2
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 4096,
+      "sample": 1,
+      "tokens": 768,
+      "delta_nll": 0.01062411622227903,
+      "mean_kl": 0.01194240055061268,
+      "same_top1": 0.9661458333333334,
+      "delta_gt_1_count": 3
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 4096,
+      "sample": 2,
+      "tokens": 768,
+      "delta_nll": -0.0029283763329462525,
+      "mean_kl": 0.007937466605592665,
+      "same_top1": 0.953125,
+      "delta_gt_1_count": 0
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 4096,
+      "sample": 3,
+      "tokens": 768,
+      "delta_nll": 0.005552048294393452,
+      "mean_kl": 0.01088169363310406,
+      "same_top1": 0.9479166666666666,
+      "delta_gt_1_count": 4
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 8192,
+      "sample": 0,
+      "tokens": 889,
+      "delta_nll": 0.0007856900209562409,
+      "mean_kl": 0.01837326871350677,
+      "same_top1": 0.952755905511811,
+      "delta_gt_1_count": 5
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 8192,
+      "sample": 1,
+      "tokens": 896,
+      "delta_nll": 0.022364870991740057,
+      "mean_kl": 0.02419988619686067,
+      "same_top1": 0.9341517857142857,
+      "delta_gt_1_count": 9
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 8192,
+      "sample": 2,
+      "tokens": 896,
+      "delta_nll": 0.0026669549636912323,
+      "mean_kl": 0.021421601125697264,
+      "same_top1": 0.9441964285714286,
+      "delta_gt_1_count": 5
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 8192,
+      "sample": 3,
+      "tokens": 896,
+      "delta_nll": 0.01911998853097696,
+      "mean_kl": 0.018948158875621655,
+      "same_top1": 0.9497767857142857,
+      "delta_gt_1_count": 5
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 16384,
+      "sample": 0,
+      "tokens": 896,
+      "delta_nll": 0.001937822006694447,
+      "mean_kl": 0.01477654447642608,
+      "same_top1": 0.9598214285714286,
+      "delta_gt_1_count": 2
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 16384,
+      "sample": 1,
+      "tokens": 896,
+      "delta_nll": 0.014698058027123716,
+      "mean_kl": 0.027047246883725447,
+      "same_top1": 0.9397321428571429,
+      "delta_gt_1_count": 5
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 16384,
+      "sample": 2,
+      "tokens": 896,
+      "delta_nll": 0.002507122753191336,
+      "mean_kl": 0.05140609854651377,
+      "same_top1": 0.9174107142857143,
+      "delta_gt_1_count": 7
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 16384,
+      "sample": 3,
+      "tokens": 896,
+      "delta_nll": 0.02717258922877619,
+      "mean_kl": 0.046995796953024985,
+      "same_top1": 0.9107142857142857,
+      "delta_gt_1_count": 16
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 32768,
+      "sample": 0,
+      "tokens": 896,
+      "delta_nll": -0.008012039667370624,
+      "mean_kl": 0.035210555170622625,
+      "same_top1": 0.921875,
+      "delta_gt_1_count": 8
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 32768,
+      "sample": 1,
+      "tokens": 896,
+      "delta_nll": 0.01185303852264446,
+      "mean_kl": 0.02640518547661429,
+      "same_top1": 0.9285714285714286,
+      "delta_gt_1_count": 10
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 32768,
+      "sample": 2,
+      "tokens": 896,
+      "delta_nll": 0.007240034499501902,
+      "mean_kl": 0.03650993469589505,
+      "same_top1": 0.9118303571428571,
+      "delta_gt_1_count": 10
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 32768,
+      "sample": 3,
+      "tokens": 896,
+      "delta_nll": 0.007012893759492911,
+      "mean_kl": 0.03923114117338084,
+      "same_top1": 0.9185267857142857,
+      "delta_gt_1_count": 12
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 65536,
+      "sample": 0,
+      "tokens": 896,
+      "delta_nll": -0.0073238993758789435,
+      "mean_kl": 0.0498868287024472,
+      "same_top1": 0.8984375,
+      "delta_gt_1_count": 12
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 65536,
+      "sample": 1,
+      "tokens": 896,
+      "delta_nll": 0.02573085515954432,
+      "mean_kl": 0.037471818216294625,
+      "same_top1": 0.8984375,
+      "delta_gt_1_count": 13
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 65536,
+      "sample": 2,
+      "tokens": 896,
+      "delta_nll": 0.05609778787928902,
+      "mean_kl": 0.1127835459130686,
+      "same_top1": 0.8816964285714286,
+      "delta_gt_1_count": 26
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 65536,
+      "sample": 3,
+      "tokens": 889,
+      "delta_nll": 0.015965523220855933,
+      "mean_kl": 0.0649623018224974,
+      "same_top1": 0.9100112485939258,
+      "delta_gt_1_count": 15
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 131072,
+      "sample": 0,
+      "tokens": 896,
+      "delta_nll": 0.024822822131818207,
+      "mean_kl": 0.08465575197738846,
+      "same_top1": 0.9040178571428571,
+      "delta_gt_1_count": 18
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 131072,
+      "sample": 1,
+      "tokens": 896,
+      "delta_nll": -0.035188272885786874,
+      "mean_kl": 0.11640018671434342,
+      "same_top1": 0.8705357142857143,
+      "delta_gt_1_count": 15
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 131072,
+      "sample": 2,
+      "tokens": 896,
+      "delta_nll": 0.0024354999031857075,
+      "mean_kl": 0.07556582203753384,
+      "same_top1": 0.8805803571428571,
+      "delta_gt_1_count": 16
+    },
+    {
+      "rope": "yarn4",
+      "seq_len": 131072,
+      "sample": 3,
+      "tokens": 889,
+      "delta_nll": 0.011631754557167029,
+      "mean_kl": 0.05874466825084619,
+      "same_top1": 0.8965129358830146,
+      "delta_gt_1_count": 13
+    }
+  ],
+  "rope_pairs_32k_tail2": [
+    {
+      "sample": 0,
+      "native": {
+        "tokens": 896,
+        "delta_nll": -0.007095971736770804,
+        "mean_kl": 0.01530670331327383,
+        "same_top1": 0.9419642857142857,
+        "delta_gt_1_count": 0
+      },
+      "yarn4": {
+        "tokens": 896,
+        "delta_nll": -0.008012039667370624,
+        "mean_kl": 0.035210555170622625,
+        "same_top1": 0.921875,
+        "delta_gt_1_count": 8
+      },
+      "kl_ratio_yarn_to_native": 2.300335640535239
+    },
+    {
+      "sample": 1,
+      "native": {
+        "tokens": 896,
+        "delta_nll": 0.014320151759974599,
+        "mean_kl": 0.014530351989552695,
+        "same_top1": 0.953125,
+        "delta_gt_1_count": 6
+      },
+      "yarn4": {
+        "tokens": 896,
+        "delta_nll": 0.01185303852264446,
+        "mean_kl": 0.02640518547661429,
+        "same_top1": 0.9285714285714286,
+        "delta_gt_1_count": 10
+      },
+      "kl_ratio_yarn_to_native": 1.817243346589235
+    },
+    {
+      "sample": 2,
+      "native": {
+        "tokens": 896,
+        "delta_nll": 0.017390611251067334,
+        "mean_kl": 0.022132916190015804,
+        "same_top1": 0.9229910714285714,
+        "delta_gt_1_count": 4
+      },
+      "yarn4": {
+        "tokens": 896,
+        "delta_nll": 0.007240034499501902,
+        "mean_kl": 0.03650993469589505,
+        "same_top1": 0.9118303571428571,
+        "delta_gt_1_count": 10
+      },
+      "kl_ratio_yarn_to_native": 1.6495763315800538
+    },
+    {
+      "sample": 3,
+      "native": {
+        "tokens": 896,
+        "delta_nll": 0.014694052441236545,
+        "mean_kl": 0.017994274222509016,
+        "same_top1": 0.9408482142857143,
+        "delta_gt_1_count": 3
+      },
+      "yarn4": {
+        "tokens": 896,
+        "delta_nll": 0.007012893759492911,
+        "mean_kl": 0.03923114117338084,
+        "same_top1": 0.9185267857142857,
+        "delta_gt_1_count": 12
+      },
+      "kl_ratio_yarn_to_native": 2.1802013622926038
+    }
+  ],
+  "cluster_64k": {
+    "all_samples": {
+      "tokens": 3577,
+      "delta_nll": 0.02263058441860443,
+      "mean_kl": 0.06627869474350079,
+      "same_top1": 0.8971204920324294,
+      "delta_gt_1_count": 66
+    },
+    "late_all_samples": {
+      "tokens": 512,
+      "delta_nll": 0.09124752223378518,
+      "mean_kl": 0.13038555418563466,
+      "same_top1": 0.890625,
+      "delta_gt_1_count": 16
+    },
+    "late_excluding_sample2": {
+      "tokens": 384,
+      "delta_nll": 0.0036724384737934664,
+      "mean_kl": 0.03857951599546298,
+      "same_top1": 0.9322916666666666,
+      "delta_gt_1_count": 1
+    },
+    "all_excluding_sample2_late": {
+      "tokens": 3449,
+      "delta_nll": 0.010333744695734049,
+      "mean_kl": 0.053678173817545714,
+      "same_top1": 0.9020005798782256,
+      "delta_gt_1_count": 51
+    },
+    "selected_tokens": [
+      {
+        "position": 58924,
+        "query_block": 460,
+        "token": " person",
+        "delta_nll": 6.397579669952393,
+        "dense_probability": 0.792212327934239,
+        "sparse_probability": 0.0013194958306403035
+      },
+      {
+        "position": 58955,
+        "query_block": 460,
+        "token": " DAR",
+        "delta_nll": 4.2449727058410645,
+        "dense_probability": 0.6985194360990993,
+        "sparse_probability": 0.010014061628755446
+      },
+      {
+        "position": 58944,
+        "query_block": 460,
+        "token": " funds",
+        "delta_nll": 3.911725044250488,
+        "dense_probability": 0.7753928064899053,
+        "sparse_probability": 0.015512478481958036
+      },
+      {
+        "position": 58948,
+        "query_block": 460,
+        "token": " merged",
+        "delta_nll": 3.584343671798706,
+        "dense_probability": 0.8769808736313451,
+        "sparse_probability": 0.02434049530973397
+      },
+      {
+        "position": 58952,
+        "query_block": 460,
+        "token": " dedicated",
+        "delta_nll": 2.9726815223693848,
+        "dense_probability": 0.9629010376520518,
+        "sparse_probability": 0.04926772261981513
+      },
+      {
+        "position": 58950,
+        "query_block": 460,
+        "token": " an",
+        "delta_nll": 2.943781852722168,
+        "dense_probability": 0.914941780083364,
+        "sparse_probability": 0.0481864847425353
+      },
+      {
+        "position": 58957,
+        "query_block": 460,
+        "token": " advanced",
+        "delta_nll": 2.890423059463501,
+        "dense_probability": 0.6699500485462544,
+        "sparse_probability": 0.037217541101969336
+      },
+      {
+        "position": 58928,
+        "query_block": 460,
+        "token": " make",
+        "delta_nll": 2.8792319297790527,
+        "dense_probability": 0.9403613340744899,
+        "sparse_probability": 0.052827523675753364
+      },
+      {
+        "position": 58921,
+        "query_block": 460,
+        "token": " clause",
+        "delta_nll": 2.7279045581817627,
+        "dense_probability": 0.6024723842394676,
+        "sparse_probability": 0.03937524543711921
+      },
+      {
+        "position": 58929,
+        "query_block": 460,
+        "token": " payments",
+        "delta_nll": 2.6226160526275635,
+        "dense_probability": 0.7103830460072063,
+        "sparse_probability": 0.05158280254644661
+      },
+      {
+        "position": 58933,
+        "query_block": 460,
+        "token": " as",
+        "delta_nll": 2.254515647888184,
+        "dense_probability": 0.8025959825441947,
+        "sparse_probability": 0.08421187323420312
+      }
+    ]
+  },
+  "replay_cases": [
+    {
+      "case": "64k_shared_query_block",
+      "rope": "yarn4",
+      "full_input_length": 65536,
+      "sample": 2,
+      "target_position": 58924,
+      "query_position": 58923,
+      "query_block": 460,
+      "prefix_length": 58924,
+      "source_id": "f205ea85a60f0353bd98268ae9f5f6ae702788629c9061be",
+      "token_id": 1697,
+      "token": " person",
+      "context_before": "90 & FY1991 NDAA permitted OTs (or cooperative agreements) to include a clause requiring a",
+      "variants": [
+        {
+          "method": "flashprefill_tail0",
+          "tail_protected": 0,
+          "dense_nll": 0.2329258322715759,
+          "nll": 6.630505561828613,
+          "delta_nll": 6.397579669952393,
+          "kl": 5.028737545013428,
+          "same_top1": 0,
+          "dense_target_probability": 0.792212327934239,
+          "sparse_target_probability": 0.0013194958306403035,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail1",
+          "tail_protected": 0,
+          "dense_nll": 0.2329258322715759,
+          "nll": 6.630505561828613,
+          "delta_nll": 6.397579669952393,
+          "kl": 5.028737545013428,
+          "same_top1": 0,
+          "dense_target_probability": 0.792212327934239,
+          "sparse_target_probability": 0.0013194958306403035,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail2",
+          "tail_protected": 0,
+          "dense_nll": 0.2329258322715759,
+          "nll": 6.630505561828613,
+          "delta_nll": 6.397579669952393,
+          "kl": 5.028737545013428,
+          "same_top1": 0,
+          "dense_target_probability": 0.792212327934239,
+          "sparse_target_probability": 0.0013194958306403035,
+          "prefix_last_full_preserving_original": 0
+        }
+      ]
+    },
+    {
+      "case": "16k_protected_fcc",
+      "rope": "yarn4",
+      "full_input_length": 16384,
+      "sample": 3,
+      "target_position": 16228,
+      "query_position": 16227,
+      "query_block": 126,
+      "prefix_length": 16228,
+      "source_id": "ba50360a6669fb0e2fbd41a020483b9bab271b5ce69b5c87",
+      "token_id": 37576,
+      "token": " FCC",
+      "context_before": " lands (see fig. 3). According to FCC officials, this new map format will support more frequent data updates.",
+      "variants": [
+        {
+          "method": "flashprefill_tail0",
+          "tail_protected": 0,
+          "dense_nll": 1.9207288026809688,
+          "nll": 3.5656723976135254,
+          "delta_nll": 1.6449435949325562,
+          "kl": 0.2846583425998688,
+          "same_top1": 0,
+          "dense_target_probability": 0.1465001535092332,
+          "sparse_target_probability": 0.028277965054039865,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail1",
+          "tail_protected": 0,
+          "dense_nll": 1.9207288026809688,
+          "nll": 3.5656723976135254,
+          "delta_nll": 1.6449435949325562,
+          "kl": 0.2846583425998688,
+          "same_top1": 0,
+          "dense_target_probability": 0.1465001535092332,
+          "sparse_target_probability": 0.028277965054039865,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail2",
+          "tail_protected": 1,
+          "dense_nll": 1.9207288026809688,
+          "nll": 6.239593505859375,
+          "delta_nll": 4.318864822387695,
+          "kl": 0.7760320901870728,
+          "same_top1": 0,
+          "dense_target_probability": 0.1465001535092332,
+          "sparse_target_probability": 0.0019506482888066658,
+          "prefix_last_full_preserving_original": 1
+        }
+      ]
+    },
+    {
+      "case": "16k_table_chron",
+      "rope": "yarn4",
+      "full_input_length": 16384,
+      "sample": 3,
+      "target_position": 14709,
+      "query_position": 14708,
+      "query_block": 114,
+      "prefix_length": 14709,
+      "source_id": "9b6fabdffaa8eaf6c613e829f3507a8af89929d8c5b974c4",
+      "token_id": 25986,
+      "token": " chron",
+      "context_before": " status as well as the poverty level of school and the type of public school. Table 19: students who were",
+      "variants": [
+        {
+          "method": "flashprefill_tail0",
+          "tail_protected": 0,
+          "dense_nll": 1.1968355178833008,
+          "nll": 8.763143539428711,
+          "delta_nll": 7.56630802154541,
+          "kl": 5.696977138519287,
+          "same_top1": 0,
+          "dense_target_probability": 0.30214884527291336,
+          "sparse_target_probability": 0.0001563922099763792,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail1",
+          "tail_protected": 0,
+          "dense_nll": 1.1968355178833008,
+          "nll": 8.763143539428711,
+          "delta_nll": 7.56630802154541,
+          "kl": 5.696977138519287,
+          "same_top1": 0,
+          "dense_target_probability": 0.30214884527291336,
+          "sparse_target_probability": 0.0001563922099763792,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail2",
+          "tail_protected": 0,
+          "dense_nll": 1.1968355178833008,
+          "nll": 8.763143539428711,
+          "delta_nll": 7.56630802154541,
+          "kl": 5.696977138519287,
+          "same_top1": 0,
+          "dense_target_probability": 0.30214884527291336,
+          "sparse_target_probability": 0.0001563922099763792,
+          "prefix_last_full_preserving_original": 0
+        }
+      ]
+    },
+    {
+      "case": "128k_early_figure",
+      "rope": "yarn4",
+      "full_input_length": 131072,
+      "sample": 0,
+      "target_position": 13079,
+      "query_position": 13078,
+      "query_block": 102,
+      "prefix_length": 13079,
+      "source_id": "490f14d293ac1c261a07bd50aeac2e86a9e76c726d7883a2",
+      "token_id": 21,
+      "token": "6",
+      "context_before": " plans to meet some of the targets; and 4 reported that they did not plan to meet any targets. Figure ",
+      "variants": [
+        {
+          "method": "flashprefill_tail0",
+          "tail_protected": 0,
+          "dense_nll": 0.0819403305649757,
+          "nll": 4.1942315101623535,
+          "delta_nll": 4.11229133605957,
+          "kl": 3.666762113571167,
+          "same_top1": 0,
+          "dense_target_probability": 0.9213269321137278,
+          "sparse_target_probability": 0.015082328625871357,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail1",
+          "tail_protected": 0,
+          "dense_nll": 0.0819403305649757,
+          "nll": 4.1942315101623535,
+          "delta_nll": 4.11229133605957,
+          "kl": 3.666762113571167,
+          "same_top1": 0,
+          "dense_target_probability": 0.9213269321137278,
+          "sparse_target_probability": 0.015082328625871357,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail2",
+          "tail_protected": 0,
+          "dense_nll": 0.0819403305649757,
+          "nll": 4.1942315101623535,
+          "delta_nll": 4.11229133605957,
+          "kl": 3.666762113571167,
+          "same_top1": 0,
+          "dense_target_probability": 0.9213269321137278,
+          "sparse_target_probability": 0.015082328625871357,
+          "prefix_last_full_preserving_original": 0
+        }
+      ]
+    },
+    {
+      "case": "128k_late_month",
+      "rope": "yarn4",
+      "full_input_length": 131072,
+      "sample": 0,
+      "target_position": 117918,
+      "query_position": 117917,
+      "query_block": 921,
+      "prefix_length": 117918,
+      "source_id": "a6d311b6722cdf0fd1e95f07371162c59183a53db1fc5f62",
+      "token_id": 6058,
+      "token": " January",
+      "context_before": " not submit the plan to Congress, as called for in the act. Even though DHS submitted the plan to OMB in",
+      "variants": [
+        {
+          "method": "flashprefill_tail0",
+          "tail_protected": 0,
+          "dense_nll": 0.0325120724737644,
+          "nll": 2.582972764968872,
+          "delta_nll": 2.5504605770111084,
+          "kl": 2.380704402923584,
+          "same_top1": 0,
+          "dense_target_probability": 0.9680107634762188,
+          "sparse_target_probability": 0.07554908020659984,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail1",
+          "tail_protected": 0,
+          "dense_nll": 0.0325120724737644,
+          "nll": 2.582972764968872,
+          "delta_nll": 2.5504605770111084,
+          "kl": 2.380704402923584,
+          "same_top1": 0,
+          "dense_target_probability": 0.9680107634762188,
+          "sparse_target_probability": 0.07554908020659984,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail2",
+          "tail_protected": 0,
+          "dense_nll": 0.0325120724737644,
+          "nll": 2.582972764968872,
+          "delta_nll": 2.5504605770111084,
+          "kl": 2.380704402923584,
+          "same_top1": 0,
+          "dense_target_probability": 0.9680107634762188,
+          "sparse_target_probability": 0.07554908020659984,
+          "prefix_last_full_preserving_original": 0
+        }
+      ]
+    },
+    {
+      "case": "32k_native_e",
+      "rope": "native",
+      "full_input_length": 32768,
+      "sample": 3,
+      "target_position": 32284,
+      "query_position": 32283,
+      "query_block": 252,
+      "prefix_length": 32284,
+      "source_id": "38a5830e9f6eb481ec9b4eb23eb5204a6f3d51831fdb2845",
+      "token_id": 468,
+      "token": " E",
+      "context_before": " store ownership. That same year, FNS also consolidated its retailer management functions, including those for authorizing stores and analyzing",
+      "variants": [
+        {
+          "method": "flashprefill_tail0",
+          "tail_protected": 0,
+          "dense_nll": 2.382620334625244,
+          "nll": 7.435062408447266,
+          "delta_nll": 5.0524420738220215,
+          "kl": 0.6835309267044067,
+          "same_top1": 1,
+          "dense_target_probability": 0.0923083814834039,
+          "sparse_target_probability": 0.0005901921427245236,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail1",
+          "tail_protected": 0,
+          "dense_nll": 2.382620334625244,
+          "nll": 7.435062408447266,
+          "delta_nll": 5.0524420738220215,
+          "kl": 0.6835309267044067,
+          "same_top1": 1,
+          "dense_target_probability": 0.0923083814834039,
+          "sparse_target_probability": 0.0005901921427245236,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail2",
+          "tail_protected": 0,
+          "dense_nll": 2.382620334625244,
+          "nll": 7.435062408447266,
+          "delta_nll": 5.0524420738220215,
+          "kl": 0.6835309267044067,
+          "same_top1": 1,
+          "dense_target_probability": 0.0923083814834039,
+          "sparse_target_probability": 0.0005901921427245236,
+          "prefix_last_full_preserving_original": 0
+        }
+      ]
+    },
+    {
+      "case": "32k_yarn_e",
+      "rope": "yarn4",
+      "full_input_length": 32768,
+      "sample": 3,
+      "target_position": 32284,
+      "query_position": 32283,
+      "query_block": 252,
+      "prefix_length": 32284,
+      "source_id": "38a5830e9f6eb481ec9b4eb23eb5204a6f3d51831fdb2845",
+      "token_id": 468,
+      "token": " E",
+      "context_before": " store ownership. That same year, FNS also consolidated its retailer management functions, including those for authorizing stores and analyzing",
+      "variants": [
+        {
+          "method": "flashprefill_tail0",
+          "tail_protected": 0,
+          "dense_nll": 1.42144775390625,
+          "nll": 4.0317206382751465,
+          "delta_nll": 2.6102728843688965,
+          "kl": 0.5358057022094727,
+          "same_top1": 0,
+          "dense_target_probability": 0.24136432767792365,
+          "sparse_target_probability": 0.01774377305744758,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail1",
+          "tail_protected": 0,
+          "dense_nll": 1.42144775390625,
+          "nll": 4.0317206382751465,
+          "delta_nll": 2.6102728843688965,
+          "kl": 0.5358057022094727,
+          "same_top1": 0,
+          "dense_target_probability": 0.24136432767792365,
+          "sparse_target_probability": 0.01774377305744758,
+          "prefix_last_full_preserving_original": 0
+        },
+        {
+          "method": "flashprefill_tail2",
+          "tail_protected": 0,
+          "dense_nll": 1.42144775390625,
+          "nll": 4.0317206382751465,
+          "delta_nll": 2.6102728843688965,
+          "kl": 0.5358057022094727,
+          "same_top1": 0,
+          "dense_target_probability": 0.24136432767792365,
+          "sparse_target_probability": 0.01774377305744758,
+          "prefix_last_full_preserving_original": 0
+        }
+      ]
+    }
+  ],
+  "replay_status": "Selected from full-pass diagnostics; strict-prefix replay and layer attribution not run."
+}

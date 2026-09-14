@@ -98,3 +98,5 @@ python report.py results/qwen25_7b
 ## 执行状态
 
 用户远端已完成 kernel 检查、修复后的 4K–32K 生成基线、YaRN 4× 的 4K–128K 位置实验及原始 RoPE 32K 对照。默认保护最后 2 个块时，128K 完整前向由 34.72 s 降至 15.26 s（2.28×），峰值显存 20.63 GiB；采样 token 平均 ΔNLL 为 +0.0009，P99 为 1.2344。完整表格见[远端报告归档](results/study_4090/REPORT.md)，实验解读及下一步定位依据见 [RESULTS.md](RESULTS.md)。这些误差指标和检查结果的适用范围以各自定义和测试用例为准。
+
+最差 token 和分样本 CSV 也已归档，具体失败位置与复现候选见 [FAILURE_ANALYSIS.md](FAILURE_ANALYSIS.md)。`python analyze_failures.py` 可重新生成加权样本统计和候选 JSON；此命令只分析 CSV，不执行模型。
